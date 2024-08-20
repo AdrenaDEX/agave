@@ -160,7 +160,13 @@ pub fn invoke_builtin_function(
     stable_log::program_success(&log_collector, program_id);
 
     // Lookup table for AccountInfo
-    let account_info_map: HashMap<_, _> = account_infos.into_iter().map(|a| (a.key, a)).collect();
+    // Since the account_infos are consumed here, and borrowed above
+    // we need to clone them here to avoid borrow issues.
+    let account_infos_clone = account_infos.clone();
+    let account_info_map: HashMap<_, _> = account_infos_clone
+        .into_iter()
+        .map(|a| (a.key, a))
+        .collect();
 
     // Re-fetch the instruction context. The previous reference may have been
     // invalidated due to the `set_invoke_context` in a CPI.
